@@ -1,11 +1,14 @@
-import Diagram from './compents/Canvas/Diagram'
+import { Route, Routes } from 'react-router-dom'
+import Home from './pages/Home'
+import Blog from './pages/Blog'
+import NavLink from './compents/NavLink.jsx'
 function App() {
   return (
     <div className='h-full'>
       <div className='w-full container '>
-        <div className='w-full flex items-center justify-between'>
+        <div className='w-full flex items-center justify-around'>
           <a
-            className='flex items-center text-indigo-400 no-underline hover:no-underline font-bold text-2xl lg:text-4xl'
+            className='flex items-center w-1/3 text-indigo-400 no-underline hover:no-underline font-bold text-2xl lg:text-4xl'
             href='#'
           >
             Diagr
@@ -14,7 +17,15 @@ function App() {
               edit
             </span>
           </a>
-          <div className='flex w-1/2 justify-end content-center'>
+          <div className='flex w-1/3 justify-center gap-4 content-center'>
+            <NavLink to='/' end>
+              Diagram
+            </NavLink>
+            <NavLink to='/blog' end>
+              blog
+            </NavLink>
+          </div>
+          <div className='flex w-1/3 justify-end content-center'>
             <a
               className='inline-block text-blue-300 no-underline hover:text-pink-500 hover:text-underline text-center h-10 p-2 md:h-auto md:p-4 transform hover:scale-125 duration-300 ease-in-out'
               href='https://twitter.com/ferreira_jardin/'
@@ -46,14 +57,10 @@ function App() {
           </div>
         </div>
       </div>
-      <div className='container pt-24 md:pt-36 mx-auto flex flex-wrap flex-col md:flex-row items-center justify-center text-center'>
-        <h1 className='my-4 text-3xl md:text-5xl text-white opacity-75 font-bold leading-tight text-center md:text-left'>
-          DIAGRAM EDITOR
-        </h1>
-        <div className='w-full xl:w-4/5  overflow-hidden p-4 lg:p-4 '>
-          <Diagram />
-        </div>
-      </div>
+      <Routes>
+        <Route path='/*' element={<Home />} />
+        <Route path='/blog' element={<Blog />} />
+      </Routes>
       <div className='w-full pt-16 pb-6 text-sm text-center md:text-left fade-in'></div>
     </div>
   )
