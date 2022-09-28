@@ -11,8 +11,8 @@ function App() {
   const [user, setUser] = useContext(userContext)
   useEffect(() => {
     start().then((res) => {
-      console.log('este es el user', res)
       setUser(res)
+      // setUser(res)
     })
   }, [])
   const logginhandle = () => {

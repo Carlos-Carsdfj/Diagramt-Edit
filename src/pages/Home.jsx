@@ -1,12 +1,49 @@
+import { useContext } from 'react'
 import { useForm } from 'react-hook-form'
+import { userContext } from '../context/userContext'
+import { uploadDiagram } from '../utils/firebase/initServices'
 import Diagram from '../compents/Canvas/Diagram'
+
 function Home() {
+  const [user, setUser] = useContext(userContext)
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm()
-  const onSubmit = (data) => {}
+  const onSubmit = async (data) => {
+    const { search } = window.location
+    if (search.length > 2) {
+      try {
+        const urlParams = new URLSearchParams(search)
+        const linkParams = urlParams.get('link')
+        const diagramParams = urlParams.get('diagram')
+        if (!linkParams) {
+          throw 'Error link invalited'
+        }
+        const info = {
+          title: data.Title,
+          link: linkParams,
+          comment: data.Comment,
+          problem: data.Problem,
+          solution: data.Solution,
+          imgUrl:
+            'https://res.cloudinary.com/darvaxtkj/image/upload/w_150,h_150,c_scale/v1663361122/diagram_uxviwc.png',
+          uid: diagramParams || null,
+        }
+        const diagramId = await uploadDiagram(info)
+        console.log('desde cliente :', diagramId)
+        window.history.replaceState(
+          null,
+          null,
+          `/?link=${linkParams}&email=${user?.email}&diagram=${diagramId}`
+        )
+      } catch (error) {
+        alert('invalid url')
+        console.log(error)
+      }
+    }
+  }
 
   return (
     <div className='container pt-24 md:pt-36 mx-auto flex flex-wrap flex-col md:flex-row items-center justify-center text-center'>

@@ -4,7 +4,18 @@ import {
   GithubAuthProvider,
   signInWithPopup,
   signOut as userSignOut,
+  onAuthStateChanged,
 } from 'firebase/auth'
+import {
+  getFirestore,
+  collection,
+  setDoc,
+  doc,
+  getDocs,
+  getDoc,
+  updateDoc,
+} from 'firebase/firestore'
+import idGenerate from './idGenerate'
 
 const provider = new GithubAuthProvider()
 const firebaseConfig = {
@@ -16,13 +27,14 @@ const firebaseConfig = {
   appId: '1:338121180302:web:e726a8824f36ecf065b5df',
   measurementId: 'G-ELM5YW9HW0',
 }
-
+let db = null
 let app = null
 let auth = null
 export const start = async () => {
   try {
     app = await initializeApp(firebaseConfig)
     auth = await getAuth(app)
+    db = getFirestore(app)
     console.log('init')
   } catch (error) {
     if (!/already exists/.test(error.message)) {
@@ -30,9 +42,12 @@ export const start = async () => {
     }
   }
   return new Promise((resolve) => {
-    resolve(auth?.currentUser)
+    onAuthStateChanged(auth, (user) => {
+      resolve(user)
+    })
   })
 }
+
 export const singIn = async () => {
   let authUser = null
   await signInWithPopup(auth, provider)
@@ -44,6 +59,7 @@ export const singIn = async () => {
       console.log('token :', token)
       // The signed-in user info.
       const user = result.user
+      console.log('user name :', user.reloadUserInfo.screenName)
       console.log('user :', user)
       authUser = user
     })
@@ -68,11 +84,66 @@ export const signOut = async () => {
       console.log('a:', s)
     })
     .catch((error) => {
-      // An error happened.
+      console.log('Error In signOut', error)
     })
 }
 
-export const currentUser = () => {
-  const user = auth.currentUser
-  console.log(user)
+export const uploadDiagram = async (info) => {
+  const newId = idGenerate()()
+  const newDiagram = {
+    link: info.link,
+    title: info.title,
+    comment: info.comment,
+    problem: info.problem,
+    solution: info.solution,
+    imgUrl: info.imgUrl,
+    uid: newId,
+  }
+  const docRef = doc(db, 'diagrams', auth.currentUser.uid)
+  const docSnap = await getDoc(docRef)
+  if (docSnap.exists()) {
+    if (
+      info?.uid &&
+      docSnap.data().diagrams.some((diagram) => diagram.uid === info?.uid)
+    ) {
+      newDiagram.uid = info?.uid
+    }
+    console.log(newDiagram)
+    const newDigramsList = [
+      ...docSnap
+        .data()
+        .diagrams.filter((diagram) => diagram.uid !== newDiagram.uid),
+      newDiagram,
+    ]
+    try {
+      await updateDoc(docRef, {
+        diagrams: newDigramsList,
+      })
+      return newDiagram.uid
+    } catch (error) {
+      console.log('Error In uploadDiagram', error)
+    }
+  } else {
+    try {
+      const docReady = await setDoc(docRef, {
+        user: auth.currentUser.displayName,
+        email: auth.currentUser.email,
+        diagrams: [newDiagram],
+      })
+      return newDiagram.uid
+    } catch (error) {
+      console.log('Error In uploadDiagram', error)
+    }
+  }
+}
+export const getAllDiagrams = async () => {
+  try {
+    const querySnapshot = await getDocs(collection(db, 'diagrams'))
+    console.log(querySnapshot)
+    querySnapshot.forEach((doc) => {
+      console.log(doc.id, ' => ', doc.data())
+    })
+  } catch (error) {
+    console.log('error try catch', error)
+  }
 }

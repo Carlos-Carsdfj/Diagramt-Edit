@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { comments } from '../data'
-import { Link } from 'react-router-dom'
+import { getAllDiagrams } from '../utils/firebase/initServices'
 function Blog() {
   const [textToSearch, setTextToSearch] = useState(() => '')
 
@@ -14,6 +14,7 @@ function Blog() {
         onChange={(e) => setTextToSearch(e.target.value)}
       />
       <div className='w-full h-full flex flex-col  justify-start items-center pt-5'>
+        <button onClick={() => getAllDiagrams()}>Leer</button>
         <div className='w-3/5 h-full z-10 relative border-2 border-slate-900/70  bg-transparent shadow-2xl overflow-y-auto shadow-black    rounded-md '>
           {comments.map((info) => (
             <a href={info.url} key={info.title}>

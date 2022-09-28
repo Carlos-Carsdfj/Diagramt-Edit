@@ -5,8 +5,9 @@ import { goJsContext } from '../../../context/gojsContext'
 import DiagramWrapper from './Wrapper'
 import Modal from '../../Modal/index'
 import shortLinks from '../../../services/shortLink'
-
+import useCreateSvg from '../../../hooks/useCreateSvg'
 const Diagram = () => {
+  const { svgPrint } = useCreateSvg()
   const { diagram } = useContext(goJsContext)
   const initDiagram = {
     modelData: {
@@ -24,10 +25,6 @@ const Diagram = () => {
       try {
         const urlParams = new URLSearchParams(search)
         const shape = window.atob(urlParams.get('link'))
-        const urlUser = urlParams.get('user')
-        if (!urlUser) {
-          throw 'Error user invalited'
-        }
         diagram.model = go.Model.fromJson(shape)
       } catch (error) {
         alert('invalid url')
@@ -52,10 +49,16 @@ const Diagram = () => {
   const handleModelChange = (obj) => {
     if (diagram.isModified) {
       const hashSvg = window.btoa(diagram.model.toJson())
+      const { search } = window.location
+      const urlParams = new URLSearchParams(search)
+      const diagramParams = urlParams.get('diagram')
+      const emailParams = urlParams.get('email')
       window.history.replaceState(
         null,
         null,
-        `/?link=${hashSvg}&user=${'anonymous'}`
+        `/?link=${hashSvg}&email=${emailParams ? emailParams : 'anonymous'}${
+          diagramParams ? '&diagram=' + diagramParams : ''
+        }`
       )
       diagram.isModified = false
     }
@@ -76,23 +79,8 @@ const Diagram = () => {
   const printDiagram = () => {
     let svgWindow = window.open()
     if (!svgWindow) return
-    var printSize = new go.Size(700, 960)
-    let bnds = diagram.documentBounds
-    let x = bnds.x
-    let y = bnds.y
-    while (y < bnds.bottom) {
-      while (x < bnds.right) {
-        let svg = diagram.makeSvg({
-          scale: 1.0,
-          position: new go.Point(x, y),
-          size: printSize,
-        })
-        svgWindow.document.body.appendChild(svg)
-        x += printSize.width
-      }
-      x = bnds.x
-      y += printSize.height
-    }
+    const svg = svgPrint()
+    svgWindow.document.body.appendChild(svg)
     setTimeout(() => svgWindow.print(), 1)
   }
   const handleCloseModal = () => {
